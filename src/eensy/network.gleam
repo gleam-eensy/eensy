@@ -40,5 +40,6 @@
 //     | ap_sta_ip_assigned_config().
 // -type ap_config() :: {ap, [ap_config_property()]}.
 
+/// Start Access Point in unsecure mode
 @external(erlang, "eensy_ffi", "wait_for_ap_with_result")
 pub fn start() -> Result(Nil, Nil)
