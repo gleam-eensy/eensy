@@ -62,9 +62,17 @@ i2c_open_with_result(Params) ->
     erlang:display(Params),
     I2C = i2c:open(Params),
     ok = i2c:begin_transmission(I2C, 60),
-    % ok = i2c:write_bytes(I2C, <<"012345678890123456">>),
     init_ssd1306(I2C),
-    loop(1, I2C),
+    % i2c_OLED_clear_display(0, I2C),
+    % loop(1, I2C),
+    i2c_OLED_fill_display(0, I2C, 255),
+    timer:sleep(1),
+    i2c_OLED_fill_display(0, I2C, 0),
+    timer:sleep(1),
+    i2c_OLED_fill_display(0, I2C, 255),
+    timer:sleep(1),
+    i2c_OLED_fill_display(0, I2C, 0),
+    timer:sleep(1),
     ok = i2c:end_transmission(I2C),
     I2C.
     % case i2c:open(Params) of
@@ -100,34 +108,14 @@ init_ssd1306(I2C) ->
     ok = i2c:write_byte(I2C, <<"@">>), % hex_to_bin("40") VCOMH Deselect Level
     ok = i2c:write_byte(I2C, <<"¤">>), % hex_to_bin("A4") - Set all pixels OFF
     ok = i2c:write_byte(I2C, <<"¦">>), % hex_to_bin("A6") - Set display not inverted
-    ok = i2c:write_byte(I2C, <<"¯">>), % hex_to_bin("AF") - Set display On
-    i2c_OLED_clear_display(0, I2C).
+    ok = i2c:write_byte(I2C, <<"¯">>). % hex_to_bin("AF") - Set display On
+    
 
-loop(Cycle, I2C) ->
+i2c_OLED_fill_display(Cycle, I2C, Byte) ->
     if
-        Cycle < 100 ->
-            ok = i2c:write_byte(I2C, 101 + Cycle),
-            ok = i2c:write_byte(I2C, 110),
-            ok = i2c:write_byte(I2C, 111),
-            ok = i2c:write_byte(I2C, 80),
-            ok = i2c:write_byte(I2C, 100 + Cycle),
-            ok = i2c:write_byte(I2C, 120),
-            ok = i2c:write_byte(I2C, 112),
-            ok = i2c:write_byte(I2C, 0),
-            ok = i2c:write_byte(I2C, 121 + Cycle),
-            ok = i2c:write_byte(I2C, 120),
-            ok = i2c:write_byte(I2C, 90),
-            ok = i2c:write_byte(I2C, 120),
-            ok = i2c:write_byte(I2C, 111 + Cycle),
-            ok = i2c:write_byte(I2C, 151),
-            ok = i2c:write_byte(I2C, 111),
-            ok = i2c:write_byte(I2C, 160),
-            ok = i2c:write_byte(I2C, 100 + Cycle),
-            ok = i2c:write_byte(I2C, 170),
-            ok = i2c:write_byte(I2C, 101 + Cycle),
-            ok = i2c:write_byte(I2C, 151),
-            ok = i2c:write_byte(I2C, 181),
-            loop(Cycle + 1, I2C);
+        Cycle < 1024 ->
+            ok = i2c:write_byte(I2C, Byte),
+            i2c_OLED_fill_display(Cycle + 1, I2C, Byte);
         true ->
             nil
     end.
