@@ -7,7 +7,7 @@ licences = ["Apache-2.0"]
 [documentation]
 pages = [
     { title = " ", path = "#", source = "" },
-    { title = "GPIO guide", path = "guide/02-state-management.html", source = "./pages/guide/02-gpio-guide.md" },
+    { title = "GPIO guide", path = "guide/02-gpio-guide.html", source = "./pages/guide/02-gpio-guide.md" },
 ]
 
 [dependencies]
