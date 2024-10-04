@@ -9,6 +9,7 @@ pub type Level {
   High
 }
 
+
 pub type Pull {
   Up
   Down
@@ -22,7 +23,7 @@ pub fn start() -> Result(Int, Nil)
 @external(erlang, "gpio", "init")
 pub fn init(pin: Int) -> Nil
 
-/// Init pin
+/// Set pin pull
 @external(erlang, "gpio", "set_pin_pull")
 pub fn set_pin_pull(pin: Int, pull: Pull) -> Result(Nil, Nil)
 
