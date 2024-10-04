@@ -7,5 +7,5 @@ pub type OpenParameters {
 /// Start i2c
 // pub fn open(parameters: List(OpenParameters)) -> Result(Int, Nil)
 
-@external(erlang, "eensy_ffi", "i2c_open_with_result")
+@external(erlang, "i2c", "open")
 pub fn open(parameters: List(OpenParameters)) -> Int
