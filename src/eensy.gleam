@@ -6,8 +6,14 @@ pub type PlatformName {
   Stm32
 }
 
+/// get the running platform name
 @external(erlang, "atomvm", "platform")
 pub fn get_system_platform() -> PlatformName
 
+/// using erlang:display directly from gleam for debug purposes
 @external(erlang, "erlang", "display")
 pub fn erlang_display(any: dynamic) -> Nil
+
+/// using erlang:garbage_collect directly from gleam for forcing vm behaviour
+@external(erlang, "erlang", "garbage_collect")
+pub fn erlang_garbage_collect() -> Nil
