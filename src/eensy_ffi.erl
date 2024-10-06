@@ -4,10 +4,12 @@
 -export([
     % GPIO
     start_with_result/0, set_pin_mode_with_result/2, digital_write_with_result/2,
-    wait_for_ap_with_result/0, digital_read_with_result/1
+    wait_for_ap_with_result/0, digital_read_with_result/1,
 
     % I2C
-    % i2c_open_with_result/1
+    i2c_close_with_result/1, i2c_begin_transmission_with_result/2, 
+    i2c_end_transmission_with_result/1, i2c_write_byte_with_result/2,
+    i2c_write_bytes/3
 ]).
 
 
@@ -44,6 +46,7 @@ digital_read_with_result(Pin) ->
         {error, _} = E -> E
     end.
 
+
 % NETWORK ------------------------------------------------------------------
 
 
@@ -57,7 +60,38 @@ wait_for_ap_with_result() ->
 
 % I2C ----------------------------------------------------------------------
 
+i2c_close_with_result(I2C) ->
+    case i2c:close(I2C) of
+        ok -> {ok, nil};
+        error -> {error, nil};
+        {error, _} = E -> E
+    end.
 
+
+i2c_begin_transmission_with_result(I2C, Address) -> 
+    case i2c:begin_transmission(
+        I2C, 
+        Address
+    ) of
+        ok -> {ok, nil};
+        error -> {error, nil};
+        {error, _} = E -> E
+    end.
+
+i2c_end_transmission_with_result(I2C) -> 
+    case i2c:end_transmission(I2C) of
+        ok -> {ok, nil};
+        error -> {error, nil};
+        {error, _} = E -> E
+    end.
+
+%  write_bytes(I2C::i2c(), Bytes::binary()) -> ok | {error, Reason::term()} 
+i2c_write_byte_with_result(I2C, Byte) -> 
+    case i2c:write_byte(I2C, Byte) of
+        ok -> {ok, nil};
+        error -> {error, nil};
+        {error, _} = E -> E
+    end.
 
 % TODO: remove anything not needed below
 
@@ -70,34 +104,46 @@ wait_for_ap_with_result() ->
 % %     end.
 
 
-% i2c_open_with_result(Params) ->
-%     erlang:display(Params),
-%     I2C = i2c:open(Params),
-%     ok = i2c:begin_transmission(I2C, 60),
-%     init_ssd1306(I2C),
-%     % i2c_OLED_clear_display(0, I2C),
-%     % loop(1, I2C),
-%     i2c_OLED_fill_display(0, I2C, 255),
-%     timer:sleep(1),
-%     i2c_OLED_fill_display(0, I2C, 0),
-%     timer:sleep(1),
-%     i2c_OLED_fill_display(0, I2C, 255),
-%     timer:sleep(1),
-%     i2c_OLED_fill_display(0, I2C, 0),
-%     timer:sleep(1),
-%     ok = i2c:end_transmission(I2C),
-%     I2C.
-%     % case i2c:open(Params) of
-%     %     ok -> {ok, nil};
-%     %     error -> {error, nil};
-%     %     {error, _} = E -> E
-%     % end.
+i2c_write_bytes(Bytes, I2C, Address) ->
+    erlang:display(I2C),
+    case i2c:begin_transmission(I2C, Address) of
+        ok -> 
+            erlang:display(ok),
+            lists:foreach(fun(Byte) ->  i2c:write_byte(I2C, Byte) end, Bytes),
+            erlang:display("After write bytes"),
+            timer:sleep(1),
+            case i2c:end_transmission(I2C) of
+                ok -> {ok, nil};
+                error -> {error, nil};
+                {error, _} = E -> E
+            end
+        ;
+        error -> {error, nil};
+        {error, _} = E -> E
+    end.
+    
+    % init_ssd1306(I2C),
+    % loop(1, I2C),
+    % i2c_OLED_fill_display(0, I2C, 255),
+    % timer:sleep(1),
+    % i2c_OLED_fill_display(0, I2C, 0),
+    % timer:sleep(1),
+    % i2c_OLED_fill_display(0, I2C, 255),
+    % timer:sleep(1),
+    % i2c_OLED_fill_display(0, I2C, 0),
+    
+    % case i2c:open(Params) of
+    %     ok -> {ok, nil};
+    %     error -> {error, nil};
+    %     {error, _} = E -> E
+    % end.
 
 % % hex_to_bin(Str) -> << << (erlang:list_to_integer([H], 16)):4 >> || H <- Str >>.
 
 % init_ssd1306(I2C) ->
 %     % Based on https://gist.github.com/pulsar256/564fda3b9e8fc6b06b89
 %     % http://www.adafruit.com/datasheets/UG-2864HSWEG01.pdf Chapter 4.4 Page 15
+%     io.debug(<<0xAE>>)
 %     ok = i2c:write_byte(I2C, <<"®">>), % "AE" - Set display OFF		
 %     ok = i2c:write_byte(I2C, <<"Ô">>), % "D4" - Set Display Clock Divide Ratio / OSC Frequency
 %     ok = i2c:write_byte(I2C, <<128>>), % "80" - Display Clock Divide Ratio / OSC Frequency 
@@ -123,6 +169,8 @@ wait_for_ap_with_result() ->
 %     ok = i2c:write_byte(I2C, <<"¯">>). % hex_to_bin("AF") - Set display On
     
 
+    
+
 % i2c_OLED_fill_display(Cycle, I2C, Byte) ->
 %     if
 %         Cycle < 1024 ->
@@ -133,11 +181,13 @@ wait_for_ap_with_result() ->
 %     end.
     
 
-% i2c_OLED_clear_display(Cycle, I2C) -> 
+% i2c_OLED_clear_display(I2C, Cycle) -> 
 %     if
 %         Cycle < 1024 ->
 %             ok = i2c:write_byte(I2C, 0),
-%             i2c_OLED_clear_display(Cycle + 1, I2C);
+%             erlang:display("i2c_OLED_clear_display > write_byte"),
+%             erlang:display(ok),
+%             i2c_OLED_clear_display( I2C, Cycle + 1);
 %         true ->
 %             nil
 %     end.
