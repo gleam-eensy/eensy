@@ -6,6 +6,9 @@
     start_with_result/0, set_pin_mode_with_result/2, digital_write_with_result/2,
     wait_for_ap_with_result/0, digital_read_with_result/1,
 
+    % System
+    processes_info/0,
+
     % I2C
     i2c_close_with_result/1, i2c_begin_transmission_with_result/2, 
     i2c_end_transmission_with_result/1, i2c_write_byte_with_result/2,
@@ -56,6 +59,23 @@ wait_for_ap_with_result() ->
         error -> {error, nil};
         {error, _} = E -> E
     end.
+
+
+% System -------------------------------------------------------------------
+
+
+processes_info() -> 
+    Processes = lists:map(
+        fun(Pid)-> 
+            erlang:display(Pid), 
+            ProcessInfo = [erlang:process_info(Pid, stack_size), erlang:process_info(Pid, heap_size), erlang:process_info(Pid, memory)],
+            erlang:display(ProcessInfo),
+            ProcessInfo
+        end,
+        [erlang:processes()]
+    ),
+    erlang:display(Processes).
+
 
 
 % I2C ----------------------------------------------------------------------

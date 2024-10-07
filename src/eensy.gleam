@@ -6,6 +6,15 @@ pub type PlatformName {
   Stm32
 }
 
+pub type Pull {
+  Up
+  Down
+}
+
+/// System processess
+@external(erlang, "eensy_ffi", "processes_info")
+pub fn processes_info() -> Nil
+
 /// get the running platform name
 @external(erlang, "atomvm", "platform")
 pub fn get_system_platform() -> PlatformName
