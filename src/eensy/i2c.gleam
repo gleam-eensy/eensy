@@ -18,6 +18,9 @@ pub type EndTransmissionError =
 pub type WriteBytesError =
   dynamic.Dynamic
 
+pub type ReadBytesError =
+  dynamic.Dynamic
+
 @external(erlang, "i2c", "open")
 pub fn open(parameters: List(OpenParameters)) -> Int
 
@@ -39,9 +42,9 @@ pub fn end_transmission(i2c: Int) -> Result(Nil, EndTransmissionError)
 @external(erlang, "eensy_ffi", "i2c_write_byte_with_result")
 pub fn write_byte(i2c: Int, byte: BitArray) -> Result(Nil, WriteBytesError)
 
-@external(erlang, "eensy_ffi", "i2c_write_bytes")
-pub fn write_bytes(
-  bytes: List(BitArray),
+@external(erlang, "eensy_ffi", "i2c_read_bytes_with_result")
+pub fn read_bytes(
   i2c: Int,
   address: Int,
-) -> Result(Nil, WriteBytesError)
+  count: Int,
+) -> Result(BitArray, ReadBytesError)

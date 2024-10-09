@@ -12,7 +12,7 @@
     % I2C
     i2c_close_with_result/1, i2c_begin_transmission_with_result/2, 
     i2c_end_transmission_with_result/1, i2c_write_byte_with_result/2,
-    i2c_write_bytes/3
+    i2c_read_bytes_with_result/3
 ]).
 
 
@@ -105,13 +105,20 @@ i2c_end_transmission_with_result(I2C) ->
         {error, _} = E -> E
     end.
 
-%  write_bytes(I2C::i2c(), Bytes::binary()) -> ok | {error, Reason::term()} 
 i2c_write_byte_with_result(I2C, Byte) -> 
     case i2c:write_byte(I2C, Byte) of
         ok -> {ok, nil};
         error -> {error, nil};
         {error, _} = E -> E
     end.
+
+i2c_read_bytes_with_result(I2C, Address, Count) -> 
+    case i2c:read_bytes(I2C, Address, Count) of
+        {ok, Bytes} -> {ok, Bytes};
+        error -> {error, nil};
+        {error, _} = E -> E
+    end.
+
 
 % TODO: remove anything not needed below
 
@@ -124,23 +131,6 @@ i2c_write_byte_with_result(I2C, Byte) ->
 % %     end.
 
 
-i2c_write_bytes(Bytes, I2C, Address) ->
-    erlang:display(I2C),
-    case i2c:begin_transmission(I2C, Address) of
-        ok -> 
-            erlang:display(ok),
-            lists:foreach(fun(Byte) ->  i2c:write_byte(I2C, Byte) end, Bytes),
-            erlang:display("After write bytes"),
-            timer:sleep(1),
-            case i2c:end_transmission(I2C) of
-                ok -> {ok, nil};
-                error -> {error, nil};
-                {error, _} = E -> E
-            end
-        ;
-        error -> {error, nil};
-        {error, _} = E -> E
-    end.
     
     % init_ssd1306(I2C),
     % loop(1, I2C),
