@@ -42,6 +42,9 @@ pub fn end_transmission(i2c: Int) -> Result(Nil, EndTransmissionError)
 @external(erlang, "eensy_ffi", "i2c_write_byte_with_result")
 pub fn write_byte(i2c: Int, byte: BitArray) -> Result(Nil, WriteBytesError)
 
+@external(erlang, "eensy_ffi", "i2c_write_bytes_with_result")
+pub fn write_bytes(i2c: Int, bytes: BitArray) -> Result(Nil, WriteBytesError)
+
 @external(erlang, "eensy_ffi", "i2c_read_bytes_with_result")
 pub fn read_bytes(
   i2c: Int,

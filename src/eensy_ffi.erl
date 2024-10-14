@@ -12,7 +12,7 @@
     % I2C
     i2c_close_with_result/1, i2c_begin_transmission_with_result/2, 
     i2c_end_transmission_with_result/1, i2c_write_byte_with_result/2,
-    i2c_read_bytes_with_result/3
+    i2c_write_bytes_with_result/2, i2c_read_bytes_with_result/3
 ]).
 
 
@@ -106,11 +106,36 @@ i2c_end_transmission_with_result(I2C) ->
     end.
 
 i2c_write_byte_with_result(I2C, Byte) -> 
-    case i2c:write_byte(I2C, Byte) of
+    <<ByteAsInt:8/integer, _Rest/binary>> = Byte,
+    case i2c:write_byte(I2C, ByteAsInt) of
         ok -> {ok, nil};
         error -> {error, nil};
         {error, _} = E -> E
     end.
+
+i2c_write_bytes_with_result(I2C, Bytes) -> 
+    erlang:display(erlang:timestamp()),
+    Result = i2c_write_bytes_loop(I2C, Bytes),
+    erlang:display(erlang:timestamp()),
+    Result.
+    % case i2c:write_bytes(I2C, Bytes) of
+    %     ok -> {ok, nil};
+    %     error -> {error, nil};
+    %     {error, _} = E -> E
+    % end.
+
+i2c_write_bytes_loop(I2C, Bytes) -> 
+    case Bytes of
+        <<>> -> {ok, nil};
+        _ ->
+            <<ByteAsInt:8/integer, Rest/binary>> = Bytes,
+            case i2c:write_byte(I2C, ByteAsInt) of 
+                ok -> i2c_write_bytes_loop(I2C, Rest);
+                error -> {error, nil};
+                {error, _} = E -> E
+            end
+    end.
+
 
 i2c_read_bytes_with_result(I2C, Address, Count) -> 
     case i2c:read_bytes(I2C, Address, Count) of
