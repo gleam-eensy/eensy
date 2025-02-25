@@ -1,5 +1,7 @@
 -module(eensy_ffi).
 
+-include("ledc.hrl").
+
 % -export([start_with_result/0, set_pin_mode_with_result/2, digital_write_with_result/2]).
 -export([
     % GPIO
@@ -12,7 +14,11 @@
     % I2C
     i2c_close_with_result/1, i2c_begin_transmission_with_result/2, 
     i2c_end_transmission_with_result/1, i2c_write_byte_with_result/2,
-    i2c_write_bytes_with_result/2, i2c_read_bytes_with_result/3
+    i2c_write_bytes_with_result/2, i2c_read_bytes_with_result/3,
+
+    % LEDC
+    ledc_test/1
+
 ]).
 
 
@@ -143,6 +149,43 @@ i2c_read_bytes_with_result(I2C, Address, Count) ->
         error -> {error, nil};
         {error, _} = E -> E
     end.
+
+
+% LEDC ----------------------------------------------------------------------
+
+
+ledc_test(Pin) -> 
+    erlang:display(erlang:timestamp()),
+    erlang:display('ledc_test'),
+    
+    %% create a 5khz timer
+    SpeedMode = ?LEDC_HIGH_SPEED_MODE,
+    Channel = ?LEDC_CHANNEL_0,
+    ledc:timer_config([
+        {duty_resolution, ?LEDC_TIMER_13_BIT},
+        {freq_hz, 5000},
+        {speed_mode, ?LEDC_HIGH_SPEED_MODE},
+        {timer_num, ?LEDC_TIMER_0}
+    ]),
+    %% bind pin to this timer in a channel
+    ledc:channel_config([
+        {channel, Channel},
+        {duty, 0},
+        {gpio_num, Pin},
+        {speed_mode, ?LEDC_HIGH_SPEED_MODE},
+        {hpoint, 0},
+        {timer_sel, ?LEDC_TIMER_0}
+    ]),
+    %% set the duty cycle to 0, and fade up to 16000 over 5 seconds
+    ledc:set_duty(SpeedMode, Channel, 0),
+    ledc:update_duty(SpeedMode, Channel),
+    TargetDuty = 4000,
+    FadeMs = 1000,
+    erlang:display(erlang:timestamp()),
+    ok = ledc:fade_func_install(),
+    ok = ledc:set_fade_with_time(SpeedMode, Channel, TargetDuty, FadeMs),
+    erlang:display(erlang:timestamp()).
+
 
 
 % TODO: remove anything not needed below

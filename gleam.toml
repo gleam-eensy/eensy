@@ -3,7 +3,6 @@ version = "0.1.1"
 description = "Gleam framework for microprocessor-based embedded systems."
 licences = ["Apache-2.0"]
 
-
 [documentation]
 pages = [
     { title = " ", path = "#", source = "" },
