@@ -1,6 +1,7 @@
 import eensy.{type Pull}
 import eensy/otp/actor
 import gleam/erlang/process.{type Subject}
+import gleam/option.{type Option, None, Some}
 import gleam/result
 
 // ============================================================
@@ -24,7 +25,7 @@ pub opaque type Pin {
     pull: Pull,
     port: Int,
     direction: Direction,
-    update: fn(Level) -> Nil,
+    update: Option(fn(Level) -> Nil),
   )
 }
 
@@ -43,8 +44,8 @@ type Msg {
 // ============================================================
 
 pub fn start(pin: Pin) -> Result(PinActor(model, msg), actor.StartError) {
-  set_pin_mode(pin.port, pin.direction)
-  |> result.is_ok
+  let _ = set_pin_mode(pin.port, pin.direction)
+  let _ = set_pin_pull(pin.port, pin.pull)
 
   actor.start(pin, handle_message)
   |> result.map(PinActor)
@@ -55,7 +56,7 @@ pub fn pin(
   pull pull: Pull,
   port port: Int,
   direction direction: Direction,
-  update update: fn(Level) -> Nil,
+  update update: Option(fn(Level) -> Nil),
 ) -> Pin {
   Pin(level, pull, port, direction, update)
 }
@@ -78,7 +79,11 @@ fn handle_message(message: Msg, state: Pin) -> actor.Next(Msg, Pin) {
   case message {
     Write(value) -> {
       let _level = digital_write(state.port, value)
-      state.update(value)
+      case state.update {
+        Some(update) -> update(value)
+        None -> Nil
+      }
+
       let state = Pin(..state, level: value)
       actor.continue(state)
     }
@@ -87,7 +92,10 @@ fn handle_message(message: Msg, state: Pin) -> actor.Next(Msg, Pin) {
         digital_read(state.port)
         |> result.unwrap(Low)
 
-      state.update(level)
+      case state.update {
+        Some(update) -> update(level)
+        None -> Nil
+      }
       let state = Pin(..state, level: level)
       process.send(client, Ok(state))
       actor.continue(state)
@@ -97,8 +105,13 @@ fn handle_message(message: Msg, state: Pin) -> actor.Next(Msg, Pin) {
         digital_read(state.port)
         |> result.unwrap(Low)
 
-      state.update(level)
       let state = Pin(..state, level: level)
+
+      case state.update {
+        Some(update) -> update(level)
+        None -> Nil
+      }
+
       actor.continue(state)
     }
   }
